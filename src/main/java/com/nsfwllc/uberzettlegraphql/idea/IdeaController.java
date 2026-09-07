@@ -5,7 +5,6 @@ import graphql.relay.PageInfo;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +17,7 @@ public class IdeaController {
 
 	private final IdeaRepository      ideaRepository;
 	private final ControllerUtilities controllerUtil;
+
 	public IdeaController(final IdeaRepository repository, final ControllerUtilities controllerUtil) {
 		this.ideaRepository = repository;
 		this.controllerUtil = controllerUtil;

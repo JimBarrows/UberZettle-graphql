@@ -3,12 +3,8 @@ package com.nsfwllc.uberzettlegraphql;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities.DecodedId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -25,7 +21,7 @@ public class DecodeCursorTemplate implements GwtTemplate {
 	@BeforeEach
 	@Override
 	public void given() {
-		classUnderTest    = new ControllerUtilities(defaultPageSize, maxPageSize);
+		classUnderTest = new ControllerUtilities(defaultPageSize, maxPageSize);
 
 	}
 
