@@ -46,13 +46,14 @@ public class ControllerUtilities {
 		return Optional.of(new DecodedId(parts[0], UUID.fromString(parts[1])));
 	}
 
-	public String encodeCursor(String type, UUID id) {
-		return Base64.getUrlEncoder()
-					 .withoutPadding()
-					 .encodeToString("""
-									 ${type}:${id.toString()}
-									 """
-											 .getBytes(StandardCharsets.UTF_8));
+	public Optional<String> encodeCursor(String type, UUID id) {
+		if (isEmpty(type)) {return empty();}
+		return Optional.ofNullable(Base64.getUrlEncoder()
+										 .withoutPadding()
+										 .encodeToString("""
+														 ${type}:${id.toString()}
+														 """
+																 .getBytes(StandardCharsets.UTF_8)));
 	}
 
 	public record DecodedId(String type, UUID id) {}
