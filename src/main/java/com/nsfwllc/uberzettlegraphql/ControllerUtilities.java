@@ -50,9 +50,7 @@ public class ControllerUtilities {
 		if (isEmpty(type)) {return empty();}
 		return Optional.ofNullable(Base64.getUrlEncoder()
 										 .withoutPadding()
-										 .encodeToString("""
-														 ${type}:${id.toString()}
-														 """
+										 .encodeToString((type + ":" + id.toString())
 																 .getBytes(StandardCharsets.UTF_8)));
 	}
 
