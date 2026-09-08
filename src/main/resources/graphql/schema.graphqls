@@ -1,0 +1,14 @@
+interface Node {
+    """The ID of the object, which must be globally unique."""
+    id: ID!
+}
+
+type Idea implements Node {
+    id: ID!
+    idea: String!
+}
+
+type Query {
+    """Fetches an object given its global ID."""
+    node(id: ID!): Node
+}

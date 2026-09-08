@@ -1,6 +1,7 @@
 package com.nsfwllc.uberzettlegraphql.controllers;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
+import com.nsfwllc.uberzettlegraphql.idea.Idea;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -23,7 +24,7 @@ public class NodeController {
 		final var decodedCursor = controllerUtil.decodeCursor(id);
 		return decodedCursor.map(decodedId ->
 										 switch (decodedId.type()) {
-											 case "Idea" -> ideaRepository.findById(decodedId.id());
+											 case "com.nsfwllc.uberzettlegraphql.idea.Idea" -> ideaRepository.findById(decodedId.id());
 											 default ->
 													 throw new IllegalStateException("Unexpected value: " + decodedId);
 										 })

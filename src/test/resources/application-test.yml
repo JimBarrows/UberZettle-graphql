@@ -1,0 +1,9 @@
+spring:
+  jpa:
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+graphql:
+  graphiql:
+    enabled: true
