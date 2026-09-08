@@ -4,6 +4,7 @@ import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import graphql.relay.PageInfo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.stereotype.Controller;
@@ -47,5 +48,5 @@ public class IdeaController {
 
 	public record IdeaEdge(IdeaNode node, String cursor) {}
 
-	public record IdeaCreateInput(@NotEmpty String idea) {}
+	public record IdeaCreateInput(@NotEmpty @Size(min = 1, max = 500) String idea) {}
 }

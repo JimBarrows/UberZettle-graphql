@@ -13,9 +13,11 @@ import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static graphql.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,7 +72,7 @@ public class IdeaSteps {
 		actualId.ifPresentOrElse(decodedId -> ideaRepository.findById(decodedId.id())
 															.ifPresentOrElse(
 																	idea -> assertEquals(expectedIdea.getIdea(),
-				                                                                         idea.getIdea()),
+																						 idea.getIdea()),
 																	() -> fail("Idea " + decodedId + " not found")),
 								 () -> fail("Could not decode " + actualIdeaNode.id()));
 	}
@@ -83,23 +85,32 @@ public class IdeaSteps {
 																.equals(idea.getIdea())));
 	}
 
-	@And("I have an error message")
-	public void iHaveAnErrorMessage() {
-		assertFalse(actualResponse.returnResponse()
-								  .getErrors()
-								  .isEmpty(),
-					"Expected there to be a message in the response.  Response was %s", actualResponse.toString());
-		assertEquals(1,
-					 actualResponse.returnResponse()
-								   .getErrors()
-								   .stream()
-								   .filter(error -> "must not be empty".equals(error.getMessage()))
-								   .count(),
-					 () -> "Expected 1 error message to be \"must not be empty\".  Error message(s): \n" +
+	@And("I have a must not be empty error message")
+	public void iHaveAMustNotBeEmptyErrorMessage() {
+		assertErrorMessagesThatSay(List.of("size must be between 1 and 500", "must not be empty"));
+	}
+
+	private void assertErrorMessagesThatSay(final List<String> expectedErrorMessages) {
+
+		assertEquals(expectedErrorMessages.size(),
+					 Stream.of(actualResponse.returnResponse()
+											 .getErrors()
+											 .getFirst()
+											 .getMessage()
+											 .split(","))
+							 .map(String::trim)
+						   .filter(expectedErrorMessages::contains)
+						   .count(),
+					 () -> "Expected error(s) message to be \"" + expectedErrorMessages + "\".  Error message(s): \n" +
 						   actualResponse.returnResponse()
 										 .getErrors()
 										 .stream()
 										 .map(ResponseError::getMessage)
 										 .collect(Collectors.joining("\n")));
+	}
+
+	@And("I have a cannot exceed {int} character error message")
+	public void iHaveACannotExceedCharacterErrorMessage(int arg0) {
+		assertErrorMessagesThatSay(List.of("size must be between 1 and 500"));
 	}
 }
