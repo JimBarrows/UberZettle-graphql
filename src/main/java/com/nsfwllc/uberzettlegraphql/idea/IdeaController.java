@@ -2,16 +2,19 @@ package com.nsfwllc.uberzettlegraphql.idea;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import graphql.relay.PageInfo;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 
 @Controller
+@Validated
 public class IdeaController {
 
 	private final IdeaRepository      ideaRepository;
@@ -24,7 +27,7 @@ public class IdeaController {
 
 	@MutationMapping
 	@Transactional
-	public IdeaNode ideaCreate(@Argument IdeaCreateInput newIdea) {
+	public IdeaNode ideaCreate(@Argument @Valid IdeaCreateInput newIdea) {
 		Idea idea = Idea.builder()
 						.idea(newIdea.idea())
 						.build();

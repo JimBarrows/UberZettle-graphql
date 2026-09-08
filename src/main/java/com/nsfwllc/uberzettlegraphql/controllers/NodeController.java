@@ -1,7 +1,6 @@
 package com.nsfwllc.uberzettlegraphql.controllers;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
-import com.nsfwllc.uberzettlegraphql.idea.Idea;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;

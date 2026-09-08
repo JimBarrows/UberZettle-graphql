@@ -1,17 +1,23 @@
 package com.nsfwllc.uberzettlegraphql.steps;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
+import com.nsfwllc.uberzettlegraphql.ControllerUtilities.DecodedId;
 import com.nsfwllc.uberzettlegraphql.idea.Idea;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static graphql.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -24,6 +30,7 @@ public class IdeaSteps {
 	private       Idea                actualIdea;
 	private       IdeaNode            actualIdeaNode;
 	private       String              encodedId;
+	private       Optional<DecodedId> actualId     = Optional.empty();
 
 	public IdeaSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
 					 final ControllerUtilities controllerUtilities) {
@@ -46,23 +53,53 @@ public class IdeaSteps {
 										  .variable("newIdea", Map.of(
 												  "idea", expectedIdea.getIdea()))
 										  .execute();
-		actualIdeaNode = actualResponse
-				.path("data")
-				.path("ideaCreate")
-				.entity(IdeaNode.class)
-				.get();
+		if (actualResponse.returnResponse()
+						  .getErrors()
+						  .isEmpty()) {
+			actualIdeaNode = actualResponse
+					.path("data")
+					.path("ideaCreate")
+					.entity(IdeaNode.class)
+					.get();
+			actualId       = controllerUtilities.decodeCursor(actualIdeaNode.id());
+		}
 	}
 
 	@Then("the idea is in the database")
 	public void theIdeaIsInTheDatabase() {
-		var id = controllerUtilities.decodeCursor(actualIdeaNode.id());
+		actualId.ifPresentOrElse(decodedId -> ideaRepository.findById(decodedId.id())
+															.ifPresentOrElse(
+																	idea -> assertEquals(expectedIdea.getIdea(),
+				                                                                         idea.getIdea()),
+																	() -> fail("Idea " + decodedId + " not found")),
+								 () -> fail("Could not decode " + actualIdeaNode.id()));
+	}
 
-		id.ifPresentOrElse(decodedId -> {
-							   ideaRepository.findById(decodedId.id())
-											 .ifPresentOrElse(
-													 idea -> assertEquals(expectedIdea.getIdea(), idea.getIdea()),
-													 () -> fail("Idea " + decodedId + " not found"));
-						   },
-						   () -> fail("Could not decode " + actualIdeaNode.id()));
+	@Then("the idea is not in the database")
+	public void theIdeaIsNotInTheDatabase() {
+		assertFalse(ideaRepository.findAll()
+								  .stream()
+								  .anyMatch(idea -> expectedIdea.getIdea()
+																.equals(idea.getIdea())));
+	}
+
+	@And("I have an error message")
+	public void iHaveAnErrorMessage() {
+		assertFalse(actualResponse.returnResponse()
+								  .getErrors()
+								  .isEmpty(),
+					"Expected there to be a message in the response.  Response was %s", actualResponse.toString());
+		assertEquals(1,
+					 actualResponse.returnResponse()
+								   .getErrors()
+								   .stream()
+								   .filter(error -> "must not be empty".equals(error.getMessage()))
+								   .count(),
+					 () -> "Expected 1 error message to be \"must not be empty\".  Error message(s): \n" +
+						   actualResponse.returnResponse()
+										 .getErrors()
+										 .stream()
+										 .map(ResponseError::getMessage)
+										 .collect(Collectors.joining("\n")));
 	}
 }

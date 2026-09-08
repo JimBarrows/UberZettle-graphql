@@ -4,6 +4,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create-drop
-graphql:
-  graphiql:
-    enabled: true
+  graphql:
+    graphiql:
+      enabled: true
