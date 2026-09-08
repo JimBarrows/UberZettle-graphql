@@ -42,7 +42,7 @@ public class IdeaController {
 
 	public record IdeaNode(String id, String idea) {}
 
-	public record IdeaEdge(Idea node, String cursor) {}
+	public record IdeaEdge(IdeaNode node, String cursor) {}
 
 	public record IdeaCreateInput(@NotEmpty String idea) {}
 }
