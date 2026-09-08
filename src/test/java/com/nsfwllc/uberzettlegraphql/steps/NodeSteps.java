@@ -10,12 +10,9 @@ import io.cucumber.java.en.When;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
-public class MyStepdefs {
+public class NodeSteps {
 	private final IdeaRepository      ideaRepository;
 	private final HttpGraphQlTester   httpGraphQlTester;
 	private final ControllerUtilities controllerUtilities;
@@ -25,8 +22,8 @@ public class MyStepdefs {
 	private       IdeaNode            actualIdeaNode;
 	private       String              encodedId;
 
-	public MyStepdefs(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
-					  final ControllerUtilities controllerUtilities) {
+	public NodeSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
+					 final ControllerUtilities controllerUtilities) {
 		this.ideaRepository      = ideaRepository;
 		this.httpGraphQlTester   = httpGraphQlTester;
 		this.controllerUtilities = controllerUtilities;
@@ -58,39 +55,5 @@ public class MyStepdefs {
 	@Then("the idea is returned")
 	public void theIdeaIsReturned() {
 		assertEquals(expectedIdea, actualIdea);
-	}
-
-	@Given("an idea of {string}")
-	public void anIdeaOf(String idea) {
-		if (expectedIdea == null) {
-			expectedIdea = new Idea();
-		}
-		expectedIdea.setIdea(idea);
-	}
-
-	@When("I create the idea")
-	public void iCreateTheIdea() {
-		actualResponse = httpGraphQlTester.documentName("ideaCreate")
-										  .variable("newIdea", Map.of(
-												  "idea", expectedIdea.getIdea()))
-										  .execute();
-		actualIdeaNode = actualResponse
-				.path("data")
-				.path("ideaCreate")
-				.entity(IdeaNode.class)
-				.get();
-	}
-
-	@Then("the idea is in the database")
-	public void theIdeaIsInTheDatabase() {
-		var id = controllerUtilities.decodeCursor(actualIdeaNode.id());
-
-		id.ifPresentOrElse(decodedId -> {
-							   ideaRepository.findById(decodedId.id())
-											 .ifPresentOrElse(
-													 idea -> assertEquals(expectedIdea.getIdea(), idea.getIdea()),
-													 () -> fail("Idea " + decodedId + " not found"));
-						   },
-						   () -> fail("Could not decode " + actualIdeaNode.id()));
 	}
 }

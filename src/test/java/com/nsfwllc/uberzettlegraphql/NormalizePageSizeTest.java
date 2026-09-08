@@ -8,12 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NormalizePageSizeTest implements GwtTemplate {
 
-	protected ControllerUtilities classUnderTest;
-	protected int                 maxPageSize      = 10;
-	protected int                 defaultPageSize  = 5;
-	protected Integer             expectedPageSize = 10;
-	protected Integer             pageSize         = 10;
-	protected int                 actualPageSize;
+	protected final int                 maxPageSize      = 10;
+	protected final int                 defaultPageSize  = 5;
+	protected       ControllerUtilities classUnderTest;
+	protected       Integer             expectedPageSize = 10;
+	protected       Integer             pageSize         = 10;
+	protected       int                 actualPageSize;
 
 	@BeforeEach
 	@Override

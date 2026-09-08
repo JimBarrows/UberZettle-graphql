@@ -9,14 +9,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DecodeCursorTemplate implements GwtTemplate {
-	protected ControllerUtilities classUnderTest;
-	protected int                 maxPageSize       = 10;
-	protected int                 defaultPageSize   = 5;
-	protected Optional<DecodedId> expectedDecodedId = Optional.empty();
-	protected Optional<DecodedId> actualDecodedId   = Optional.empty();
-	protected String              cursor            = "";
-	protected String              type              = "type";
-	protected String              uuid              = "3b7dafc0-7437-4de7-a274-6fefac0ad266";
+	protected final int                 maxPageSize       = 10;
+	protected final int                 defaultPageSize   = 5;
+	protected final String              type              = "type";
+	protected final String              uuid              = "3b7dafc0-7437-4de7-a274-6fefac0ad266";
+	protected       ControllerUtilities classUnderTest;
+	protected       Optional<DecodedId> expectedDecodedId = Optional.empty();
+	protected       Optional<DecodedId> actualDecodedId   = Optional.empty();
+	protected       String              cursor            = "";
 
 	@BeforeEach
 	@Override
