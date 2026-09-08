@@ -1,4 +1,4 @@
-Feature: node works
+Feature: Relay specific behavior
 
   Scenario: Node returns an idea entity
     Given an idea exists in the repo

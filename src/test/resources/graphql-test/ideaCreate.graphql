@@ -1,0 +1,6 @@
+mutation IdeaCreate($newIdea: IdeaCreateInput!) {
+    ideaCreate(newIdea: $newIdea) {
+        id
+        idea
+    }
+}

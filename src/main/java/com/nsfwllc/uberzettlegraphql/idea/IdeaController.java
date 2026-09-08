@@ -2,14 +2,13 @@ package com.nsfwllc.uberzettlegraphql.idea;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import graphql.relay.PageInfo;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 
 @Controller
@@ -23,42 +22,16 @@ public class IdeaController {
 		this.controllerUtil = controllerUtil;
 	}
 
-	@QueryMapping
-	public Idea idea(@Argument UUID id) {
-		return ideaRepository.findById(id)
-							 .orElseThrow(() -> new IllegalArgumentException("Idea not found: " + id));
-	}
-
 	@MutationMapping
 	@Transactional
-	public Idea addIdea(@Argument CreateIdeaInput newIdea) {
+	public IdeaNode ideaCreate(@Argument IdeaCreateInput newIdea) {
 		Idea idea = Idea.builder()
+						.idea(newIdea.idea())
 						.build();
-		return ideaRepository.save(idea);
-	}
-
-	@MutationMapping
-	@Transactional
-	public Idea updateIdea(@Argument UUID id, @Argument UpdateIdeaInput updateIdea) {
-		Idea idea = ideaRepository.findById(id)
-								  .orElseThrow(() -> new IllegalArgumentException("Idea not found: " + id));
-
-		Idea updated = Idea.builder()
-						   .build();
-
-		return ideaRepository.save(updated);
-	}
-
-	@MutationMapping
-	@Transactional
-	public DeleteIdeaOutput deleteIdea(@Argument UUID id) {
-		if (!ideaRepository.existsById(id)) {
-			return new DeleteIdeaOutput(id, false);
-		}
-
-		ideaRepository.deleteById(id);
-
-		return new DeleteIdeaOutput(id, true);
+		final var savedIdea = ideaRepository.save(idea);
+		return new IdeaNode(controllerUtil.encodeCursor(Idea.class.getName(), savedIdea.getId())
+		                                  .orElseThrow(() -> new RuntimeException("Could not encode cursor")),
+		                    savedIdea.getIdea());
 	}
 
 	public record IdeaConnection(
@@ -67,15 +40,9 @@ public class IdeaController {
 	) {
 	}
 
-	public record IdeaEdge(Idea node, String cursor) {
-	}
+	public record IdeaNode(String id, String idea) {}
 
-	public record CreateIdeaInput() {
-	}
+	public record IdeaEdge(Idea node, String cursor) {}
 
-	public record UpdateIdeaInput() {
-	}
-
-	public record DeleteIdeaOutput(UUID id, boolean deleted) {
-	}
+	public record IdeaCreateInput(@NotEmpty String idea) {}
 }

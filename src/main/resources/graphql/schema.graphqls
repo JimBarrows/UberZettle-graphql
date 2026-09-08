@@ -8,6 +8,13 @@ type Idea implements Node {
     idea: String!
 }
 
+input IdeaCreateInput{
+    idea: String!
+}
+
+type Mutation {
+    ideaCreate( newIdea: IdeaCreateInput): Idea
+}
 type Query {
     """Fetches an object given its global ID."""
     node(id: ID!): Node
