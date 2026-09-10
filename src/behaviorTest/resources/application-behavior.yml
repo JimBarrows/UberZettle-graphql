@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+  graphql:
+    schema:
+      locations: classpath*:graphql/**/
+    http:
+      path: /graphql
+    graphiql:
+      enabled: true
+
+
+debug: true
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.graphql: DEBUG
+    org.springframework.graphql: DEBUG
+    org.springframework.web.servlet.function: DEBUG

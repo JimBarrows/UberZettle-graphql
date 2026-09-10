@@ -40,7 +40,7 @@ public class IdeaController {
 	}
 
 	@QueryMapping
-	public IdeaConnection ideaConnection() {
+	public IdeaConnection ideas(@Argument int first, @Argument String after, @Argument int last, @Argument  String before) {
 		return null;
 	}
 

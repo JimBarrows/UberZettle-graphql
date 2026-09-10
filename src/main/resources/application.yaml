@@ -1,3 +1,9 @@
 spring:
   application:
     name: UberZettle-graphql
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings,health

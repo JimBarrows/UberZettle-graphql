@@ -7,6 +7,7 @@ import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 
@@ -54,6 +55,6 @@ public class NodeSteps {
 
 	@Then("the idea is returned")
 	public void theIdeaIsReturned() {
-		assertEquals(expectedIdea, actualIdea);
+		Assertions.assertEquals(expectedIdea, actualIdea);
 	}
 }

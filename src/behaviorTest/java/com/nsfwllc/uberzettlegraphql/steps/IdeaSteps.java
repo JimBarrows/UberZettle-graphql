@@ -6,10 +6,12 @@ import com.nsfwllc.uberzettlegraphql.idea.Idea;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaConnection;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
+import graphql.Assert;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
@@ -75,17 +77,17 @@ public class IdeaSteps {
 	public void theIdeaIsInTheDatabase() {
 		actualId.ifPresentOrElse(decodedId -> ideaRepository.findById(decodedId.id())
 															.ifPresentOrElse(
-																	idea -> assertEquals(expectedIdea.getIdea(),
-																						 idea.getIdea()),
-																	() -> fail("Idea " + decodedId + " not found")),
-								 () -> fail("Could not decode " + actualIdeaNode.id()));
+																	idea -> Assertions.assertEquals(expectedIdea.getIdea(),
+																									idea.getIdea()),
+																	() -> Assertions.fail("Idea " + decodedId + " not found")),
+								 () -> Assertions.fail("Could not decode " + actualIdeaNode.id()));
 	}
 
 	@Then("the idea is not in the database")
 	public void theIdeaIsNotInTheDatabase() {
-		assertFalse(ideaRepository.findAll()
-								  .stream()
-								  .anyMatch(idea -> expectedIdea.getIdea()
+		Assert.assertFalse(ideaRepository.findAll()
+										 .stream()
+										 .anyMatch(idea -> expectedIdea.getIdea()
 																.equals(idea.getIdea())));
 	}
 
@@ -96,8 +98,8 @@ public class IdeaSteps {
 
 	private void assertErrorMessagesThatSay(final List<String> expectedErrorMessages) {
 
-		assertEquals(expectedErrorMessages.size(),
-					 Stream.of(actualResponse.returnResponse()
+		Assertions.assertEquals(expectedErrorMessages.size(),
+								Stream.of(actualResponse.returnResponse()
 											 .getErrors()
 											 .getFirst()
 											 .getMessage()
@@ -105,7 +107,7 @@ public class IdeaSteps {
 						   .map(String::trim)
 						   .filter(expectedErrorMessages::contains)
 						   .count(),
-					 () -> "Expected error(s) message to be \"" + expectedErrorMessages + "\".  Error message(s): \n" +
+								() -> "Expected error(s) message to be \"" + expectedErrorMessages + "\".  Error message(s): \n" +
 						   actualResponse.returnResponse()
 										 .getErrors()
 										 .stream()
@@ -141,14 +143,14 @@ public class IdeaSteps {
 
 	@Then("I get {int} ideas")
 	public void iGetIdeas(int ideaCount) {
-		assertEquals(ideaCount, actualIdeaConnection.edges()
-		                                            .size());
+		Assertions.assertEquals(ideaCount, actualIdeaConnection.edges()
+															   .size());
 		final var ideaList = actualIdeaConnection.edges()
 												 .stream()
 												 .map(edge -> edge.node()
 		                                                          .idea())
 												 .toList();
-		assertEquals(ideaCount, expectedIdeas
+		Assertions.assertEquals(ideaCount, expectedIdeas
 				.stream()
 				.filter(idea ->
 								ideaList.contains(idea.getIdea()))
