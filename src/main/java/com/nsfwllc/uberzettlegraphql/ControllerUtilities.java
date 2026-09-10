@@ -31,7 +31,7 @@ public class ControllerUtilities {
 		return Math.min(first, maxPageSize);
 	}
 
-	public Optional<DecodedId> decodeCursor(String cursor) {
+	public static Optional<DecodedId> decodeCursor(String cursor) {
 		if (isEmpty(cursor)) {
 			return empty();
 		}
@@ -46,7 +46,7 @@ public class ControllerUtilities {
 		return Optional.of(new DecodedId(parts[0], UUID.fromString(parts[1])));
 	}
 
-	public Optional<String> encodeCursor(String type, UUID id) {
+	public static Optional<String> encodeCursor(String type, UUID id) {
 		if (isEmpty(type)) {return empty();}
 		return Optional.ofNullable(Base64.getUrlEncoder()
 										 .withoutPadding()
