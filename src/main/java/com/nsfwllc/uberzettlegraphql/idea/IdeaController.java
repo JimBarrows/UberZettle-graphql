@@ -1,13 +1,13 @@
 package com.nsfwllc.uberzettlegraphql.idea;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
-import graphql.relay.ConnectionCursor;
-import graphql.relay.DefaultConnection;
-import graphql.relay.Edge;
-import graphql.relay.PageInfo;
+import graphql.relay.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+
+import static com.nsfwllc.uberzettlegraphql.ControllerUtilities.encodeCursor;
 
 
 @Controller
@@ -44,12 +46,47 @@ public class IdeaController {
 
 	@QueryMapping
 	public IdeaConnection ideas(@Argument int first, @Argument String after, @Argument int last,
-	                            @Argument String before) {
-		return null;
+								@Argument String before) {
+		PageRequest page = PageRequest.of(0, 1000);
+		final var edgeList = ideaRepository.findByOrderByIdAsc(page)
+										   .stream()
+										   .<Edge<IdeaNode>>map(idea -> new IdeaEdge(
+												   new IdeaNode(
+														   encodeCursor(Idea.class.getName(), idea.getId()).orElse(
+																   ""),
+														   idea.getIdea()),
+												   new DefaultConnectionCursor(
+														   encodeCursor(Idea.class.getName(), idea.getId()).orElse(
+																   ""))))
+										   .toList();
+		final boolean hasPreviousPage = false;
+		final boolean hasNextPage     = false;
+		final var firstCursor = new DefaultConnectionCursor(edgeList.stream()
+																	.findFirst()
+																	.orElse(new IdeaEdge(null,
+																						 new DefaultConnectionCursor(
+																								 "There is no cursor")))
+																	.getCursor()
+																	.getValue());
+		final var lastCursor = new DefaultConnectionCursor(edgeList.stream()
+																   .reduce((firstEdge, secondEdge) -> secondEdge)
+																   .orElse(new IdeaEdge(null,
+																						new DefaultConnectionCursor(
+																								"There is no cursor")))
+																   .getCursor()
+																   .getValue());
+		return new IdeaConnection(edgeList,
+								  new DefaultPageInfo(
+										  firstCursor,
+										  lastCursor,
+										  hasPreviousPage,
+										  hasNextPage)
+		);
 	}
 
 	public record IdeaNode(String id, String idea) {}
 
+	@EqualsAndHashCode(callSuper=false)
 	public static class IdeaEdge implements Edge<IdeaNode> {
 		private final IdeaNode         node;
 		private final ConnectionCursor cursor;
@@ -78,6 +115,8 @@ public class IdeaController {
 
 	public record IdeaCreateInput(@NotEmpty @Size(min = 1, max = 500) String idea) {}
 
+	@Data
+	@EqualsAndHashCode(callSuper=false)
 	public static class IdeaConnection extends DefaultConnection<IdeaNode> {
 
 		/**

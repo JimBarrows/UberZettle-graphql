@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static com.nsfwllc.uberzettlegraphql.ControllerUtilities.encodeCursor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 
 public class IdeaControllerIdeasTest implements GwtTemplate {
 
@@ -53,7 +54,7 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 								  .idea("This is idea " + i)
 								  .build());
 		}
-		Mockito.when(ideasRepository.findAll())
+		Mockito.when(ideasRepository.findByOrderByIdAsc(any()))
 			   .thenReturn(expectedIdeas);
 		expectedIdeaEdges      = expectedIdeas.stream()
 											  .<Edge<IdeaNode>>map(idea -> new IdeaEdge(
