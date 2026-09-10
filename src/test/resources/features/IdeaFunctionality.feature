@@ -16,3 +16,8 @@ Feature: Idea Functionality
     When I create the idea
     Then the idea is not in the database
     And I have a cannot exceed 500 character error message
+
+    Scenario: I can get a list of ideas
+      Given there are 5 ideas in the database
+      When I query for a list
+      Then I get 5 ideas

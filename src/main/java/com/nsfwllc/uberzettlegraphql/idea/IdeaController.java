@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +37,11 @@ public class IdeaController {
 		return new IdeaNode(controllerUtil.encodeCursor(Idea.class.getName(), savedIdea.getId())
 		                                  .orElseThrow(() -> new RuntimeException("Could not encode cursor")),
 		                    savedIdea.getIdea());
+	}
+
+	@QueryMapping
+	public IdeaConnection ideaConnection() {
+		return null;
 	}
 
 	public record IdeaConnection(

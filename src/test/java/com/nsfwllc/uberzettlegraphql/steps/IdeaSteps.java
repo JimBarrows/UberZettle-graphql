@@ -3,6 +3,7 @@ package com.nsfwllc.uberzettlegraphql.steps;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities.DecodedId;
 import com.nsfwllc.uberzettlegraphql.idea.Idea;
+import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaConnection;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import io.cucumber.java.en.And;
@@ -13,6 +14,7 @@ import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,12 +29,14 @@ public class IdeaSteps {
 	private final IdeaRepository      ideaRepository;
 	private final HttpGraphQlTester   httpGraphQlTester;
 	private final ControllerUtilities controllerUtilities;
-	private       Idea                expectedIdea = null;
+	IdeaConnection actualIdeaConnection = null;
+	private       Idea                expectedIdea  = null;
 	private       Response            actualResponse;
-	private       Idea                actualIdea;
+	//	private       Idea                actualIdea;
 	private       IdeaNode            actualIdeaNode;
-	private       String              encodedId;
-	private       Optional<DecodedId> actualId     = Optional.empty();
+	//	private       String              encodedId;
+	private       Optional<DecodedId> actualId      = Optional.empty();
+	private       List<Idea>          expectedIdeas = new ArrayList<>();
 
 	public IdeaSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
 					 final ControllerUtilities controllerUtilities) {
@@ -98,7 +102,7 @@ public class IdeaSteps {
 											 .getFirst()
 											 .getMessage()
 											 .split(","))
-							 .map(String::trim)
+						   .map(String::trim)
 						   .filter(expectedErrorMessages::contains)
 						   .count(),
 					 () -> "Expected error(s) message to be \"" + expectedErrorMessages + "\".  Error message(s): \n" +
@@ -113,4 +117,43 @@ public class IdeaSteps {
 	public void iHaveACannotExceedCharacterErrorMessage(int arg0) {
 		assertErrorMessagesThatSay(List.of("size must be between 1 and 500"));
 	}
+
+	@Given("there are {int} ideas in the database")
+	public void thereAreIdeasInTheDatabase(int numberOfIdeas) {
+		for (int i = 0; i < numberOfIdeas; i++) {
+			expectedIdeas.add(Idea.builder()
+								  .idea("This is idea " + i)
+								  .build());
+		}
+		expectedIdeas = ideaRepository.saveAll(expectedIdeas);
+	}
+
+	@When("I query for a list")
+	public void iQueryForAList() {
+		actualResponse       = httpGraphQlTester.documentName("ideas")
+												.execute();
+		actualIdeaConnection = actualResponse
+				.path("data")
+				.path("ideaCreate")
+				.entity(IdeaConnection.class)
+				.get();
+	}
+
+	@Then("I get {int} ideas")
+	public void iGetIdeas(int ideaCount) {
+		assertEquals(ideaCount, actualIdeaConnection.edges()
+		                                            .size());
+		final var ideaList = actualIdeaConnection.edges()
+												 .stream()
+												 .map(edge -> edge.node()
+		                                                          .idea())
+												 .toList();
+		assertEquals(ideaCount, expectedIdeas
+				.stream()
+				.filter(idea ->
+								ideaList.contains(idea.getIdea()))
+				.count());
+
+	}
+
 }

@@ -1,0 +1,17 @@
+query Ideas($first: Int, $after: ID, $last: Int, $before: ID ) {
+    ideas(first: $first, after: $after, last: $last, before: $before) {
+        edges {
+            cursor
+            node {
+                id
+                idea
+            }
+        }
+        pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+        }
+    }
+}

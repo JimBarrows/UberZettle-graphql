@@ -8,8 +8,24 @@ type Idea implements Node {
     idea: String!
 }
 
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+}
+
 input IdeaCreateInput{
     idea: String!
+}
+
+type IdeaEdge {
+    cursor: String!
+    node: Idea!
+}
+type IdeaConnection {
+    edges: [IdeaEdge!]!
+    pageInfo: PageInfo!
 }
 
 type Mutation {
@@ -18,4 +34,8 @@ type Mutation {
 type Query {
     """Fetches an object given its global ID."""
     node(id: ID!): Node
+    ideas(first: Int
+        after: ID
+        last: Int
+        before: ID): IdeaConnection!
 }
