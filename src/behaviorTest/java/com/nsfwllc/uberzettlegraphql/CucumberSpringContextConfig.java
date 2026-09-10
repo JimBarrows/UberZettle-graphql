@@ -14,7 +14,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 		webEnvironment = WebEnvironment.RANDOM_PORT,
 		classes = UberZettleGraphqlApplication.class
 )
-@Import(SpringTestConfig.class)
+@Import(BehaviorTestConfig.class)
 @ActiveProfiles("behavior")
 public class CucumberSpringContextConfig {
 	// Define the container as a static singleton instance

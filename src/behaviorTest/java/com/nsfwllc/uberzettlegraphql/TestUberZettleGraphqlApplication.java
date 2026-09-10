@@ -6,7 +6,7 @@ public class TestUberZettleGraphqlApplication {
 
 	static void main(String... args) {
 		SpringApplication.from(UberZettleGraphqlApplication::main)
-						 .with(TestcontainersConfiguration.class)
+						 .with(BehaviorTestConfig.class)
 						 .run(args);
 	}
 
