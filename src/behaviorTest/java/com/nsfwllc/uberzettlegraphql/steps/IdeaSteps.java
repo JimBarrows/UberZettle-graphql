@@ -7,6 +7,7 @@ import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaConnection;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import graphql.Assert;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -43,6 +44,17 @@ public class IdeaSteps {
 		this.ideaRepository      = ideaRepository;
 		this.httpGraphQlTester   = httpGraphQlTester;
 		this.controllerUtilities = controllerUtilities;
+	}
+
+	@Before
+	public void cleanDatabase() {
+		ideaRepository.deleteAll();
+		expectedIdea = null;
+		actualResponse = null;
+		actualIdeaNode = null;
+		actualId = Optional.empty();
+		actualIdeaConnection = null;
+		expectedIdeas = new ArrayList<>();
 	}
 
 	@Given("an idea of {string}")
