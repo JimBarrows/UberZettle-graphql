@@ -2,8 +2,8 @@ package com.nsfwllc.uberzettlegraphql;
 
 import com.nsfwllc.uberzettlegraphql.idea.Idea;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaConnection;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaEdge;
+import com.nsfwllc.uberzettlegraphql.idea.IdeaConnection;
+import com.nsfwllc.uberzettlegraphql.idea.IdeaEdge;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import graphql.relay.DefaultConnectionCursor;
