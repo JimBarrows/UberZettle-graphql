@@ -91,11 +91,7 @@ tasks.register('behaviorTest', Test) {
     shouldRunAfter test
 
     useJUnitPlatform()
-    doFirst {
-        println "behaviorTest runtime classpath:"
-        classpath.files.each { println "  $it" }
-        println "schema exists in build/resources/main: ${file('build/resources/main/graphql/schema.graphqls').exists()}"
-    }
+
     testLogging {
         events "passed", "failed", "skipped"
         exceptionFormat "full"
