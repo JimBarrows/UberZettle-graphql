@@ -1,11 +1,12 @@
 package com.nsfwllc.uberzettlegraphql.idea;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import graphql.relay.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -45,7 +46,7 @@ public class IdeaController {
 	}
 
 	@QueryMapping
-	public IdeaConnection ideas(@Argument int first, @Argument String after, @Argument int last,
+	public IdeaConnection ideas(@Argument Integer first, @Argument String after, @Argument Integer last,
 								@Argument String before) {
 		PageRequest page = PageRequest.of(0, 1000);
 		final var edgeList = ideaRepository.findByOrderByIdAsc(page)
@@ -91,6 +92,15 @@ public class IdeaController {
 		private final IdeaNode         node;
 		private final ConnectionCursor cursor;
 
+		@JsonCreator
+		public IdeaEdge(
+				@JsonProperty("node") final IdeaNode node,
+				@JsonProperty("cursor") final String cursor
+		) {
+			this.node   = node;
+			this.cursor = cursor != null ? new DefaultConnectionCursor(cursor) : null;
+		}
+
 		public IdeaEdge(final IdeaNode node, final ConnectionCursor cursor) {
 			this.node   = node;
 			this.cursor = cursor;
@@ -113,11 +123,68 @@ public class IdeaController {
 		}
 	}
 
+	@EqualsAndHashCode(callSuper=false)
+	public static class IdeaPageInfo implements PageInfo {
+		private final ConnectionCursor startCursor;
+		private final ConnectionCursor endCursor;
+		private final boolean          hasPreviousPage;
+		private final boolean          hasNextPage;
+
+		@JsonCreator
+		public IdeaPageInfo(
+				@JsonProperty("startCursor") final String startCursor,
+				@JsonProperty("endCursor") final String endCursor,
+				@JsonProperty("hasPreviousPage") final boolean hasPreviousPage,
+				@JsonProperty("hasNextPage") final boolean hasNextPage
+		) {
+			this.startCursor     = startCursor != null ? new DefaultConnectionCursor(startCursor) : null;
+			this.endCursor       = endCursor != null ? new DefaultConnectionCursor(endCursor) : null;
+			this.hasPreviousPage = hasPreviousPage;
+			this.hasNextPage     = hasNextPage;
+		}
+
+		public IdeaPageInfo(final ConnectionCursor startCursor, final ConnectionCursor endCursor,
+							final boolean hasPreviousPage, final boolean hasNextPage) {
+			this.startCursor     = startCursor;
+			this.endCursor       = endCursor;
+			this.hasPreviousPage = hasPreviousPage;
+			this.hasNextPage     = hasNextPage;
+		}
+
+		@Override
+		public ConnectionCursor getStartCursor() {
+			return startCursor;
+		}
+
+		@Override
+		public ConnectionCursor getEndCursor() {
+			return endCursor;
+		}
+
+		@Override
+		public boolean isHasPreviousPage() {
+			return hasPreviousPage;
+		}
+
+		@Override
+		public boolean isHasNextPage() {
+			return hasNextPage;
+		}
+	}
+
 	public record IdeaCreateInput(@NotEmpty @Size(min = 1, max = 500) String idea) {}
 
-	@Data
 	@EqualsAndHashCode(callSuper=false)
 	public static class IdeaConnection extends DefaultConnection<IdeaNode> {
+
+		@JsonCreator
+		public IdeaConnection(
+				@JsonProperty("edges") final List<IdeaEdge> edges,
+				@JsonProperty("pageInfo") final IdeaPageInfo pageInfo
+		) {
+			super(edges == null ? List.of() : (List) edges,
+				  pageInfo != null ? pageInfo : new DefaultPageInfo(null, null, false, false));
+		}
 
 		/**
 		 * A connection consists of a list of edges and page info

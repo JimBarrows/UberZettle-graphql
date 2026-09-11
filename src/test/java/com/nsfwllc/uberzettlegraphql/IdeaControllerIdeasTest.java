@@ -29,18 +29,18 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 	@Mock
 	protected static IdeaRepository       ideasRepository;
 	protected static IdeaController       classUnderTest;
-	protected        int                  first;
-	protected        int                  last;
+	protected        Integer              first;
+	protected        Integer              last;
 	protected        String               before;
 	protected        String               after;
-	protected        int                  defaultPageSize   = 10;
-	protected        int                  maxPageSize       = 10;
+	protected        int                  defaultPageSize       = 10;
+	protected        int                  maxPageSize           = 10;
 	protected        IdeaConnection       actualIdeaConnection;
 	protected        IdeaConnection       expectedIdeaConnection;
-	protected        List<Edge<IdeaNode>> expectedIdeaEdges = new ArrayList<>();
+	protected        List<Edge<IdeaNode>> expectedIdeaEdges     = new ArrayList<>();
 	protected        DefaultPageInfo      expectedPageInfo;
-	protected        int                  expectedNumberOfIdeas=5;
-	protected        List<Idea>           expectedIdeas     = new ArrayList<>();
+	protected        int                  expectedNumberOfIdeas = 5;
+	protected        List<Idea>           expectedIdeas         = new ArrayList<>();
 
 	@BeforeEach
 	@Override

@@ -34,9 +34,7 @@ public class IdeaSteps {
 	IdeaConnection actualIdeaConnection = null;
 	private       Idea                expectedIdea  = null;
 	private       Response            actualResponse;
-	//	private       Idea                actualIdea;
 	private       IdeaNode            actualIdeaNode;
-	//	private       String              encodedId;
 	private       Optional<DecodedId> actualId      = Optional.empty();
 	private       List<Idea>          expectedIdeas = new ArrayList<>();
 
@@ -136,18 +134,18 @@ public class IdeaSteps {
 												.execute();
 		actualIdeaConnection = actualResponse
 				.path("data")
-				.path("ideaCreate")
+				.path("ideas")
 				.entity(IdeaConnection.class)
 				.get();
 	}
 
 	@Then("I get {int} ideas")
 	public void iGetIdeas(int ideaCount) {
-		Assertions.assertEquals(ideaCount, actualIdeaConnection.edges()
+		Assertions.assertEquals(ideaCount, actualIdeaConnection.getEdges()
 															   .size());
-		final var ideaList = actualIdeaConnection.edges()
+		final var ideaList = actualIdeaConnection.getEdges()
 												 .stream()
-												 .map(edge -> edge.node()
+												 .map(edge -> edge.getNode()
 		                                                          .idea())
 												 .toList();
 		Assertions.assertEquals(ideaCount, expectedIdeas
