@@ -1,11 +1,7 @@
 package com.nsfwllc.uberzettlegraphql;
 
-import com.nsfwllc.uberzettlegraphql.idea.Idea;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaController;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaConnection;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaEdge;
+import com.nsfwllc.uberzettlegraphql.idea.*;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultPageInfo;
 import graphql.relay.Edge;
@@ -29,6 +25,7 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 	@Mock
 	protected static IdeaRepository       ideasRepository;
 	protected static IdeaController       classUnderTest;
+	private final AutoCloseable autoCloseable = MockitoAnnotations.openMocks(this);
 	protected        Integer              first;
 	protected        Integer              last;
 	protected        String               before;
@@ -45,9 +42,10 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 	@BeforeEach
 	@Override
 	public void given() {
-		MockitoAnnotations.openMocks(this);
+
 		classUnderTest =
 				new IdeaController(ideasRepository, new ControllerUtilities(defaultPageSize, maxPageSize));
+
 		for (int i = 1; i <= expectedNumberOfIdeas; i++) {
 			expectedIdeas.add(Idea.builder()
 								  .id(UUID.randomUUID())
@@ -56,15 +54,16 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 		}
 		Mockito.when(ideasRepository.findByOrderByIdAsc(any()))
 			   .thenReturn(expectedIdeas);
+
 		expectedIdeaEdges      = expectedIdeas.stream()
 											  .<Edge<IdeaNode>>map(idea -> new IdeaEdge(
 													  new IdeaNode(
-															  encodeCursor(Idea.class.getName(), idea.getId()).orElse(
-																	  ""),
+															  encodeCursor(Idea.class.getName(), idea.getId())
+																	  .orElse(""),
 															  idea.getIdea()),
 													  new DefaultConnectionCursor(
-															  encodeCursor(Idea.class.getName(), idea.getId()).orElse(
-																	  ""))))
+															  encodeCursor(Idea.class.getName(), idea.getId())
+																	  .orElse(""))))
 											  .toList();
 		expectedPageInfo       = new DefaultPageInfo(expectedIdeaEdges.getFirst()
 																	  .getCursor(),
@@ -86,6 +85,5 @@ public class IdeaControllerIdeasTest implements GwtTemplate {
 	public void then() {
 		assertEquals(expectedPageInfo, actualIdeaConnection.getPageInfo());
 		assertEquals(expectedIdeaConnection.getEdges(), actualIdeaConnection.getEdges());
-
 	}
 }

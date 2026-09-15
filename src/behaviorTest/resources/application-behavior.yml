@@ -12,11 +12,15 @@ spring:
     graphiql:
       enabled: true
 
-
-debug: true
-
 logging:
   level:
     org.springframework.boot.autoconfigure.graphql: DEBUG
-    org.springframework.graphql: DEBUG
-    org.springframework.web.servlet.function: DEBUG
+    org.springframework.graphql: trace
+    org.springframework.web.servlet.function: INFO
+
+com:
+  nsfwllc:
+    uberzettlegraphql:
+      controllers:
+        defaultPageSize: 5
+        maxPageSize: 10

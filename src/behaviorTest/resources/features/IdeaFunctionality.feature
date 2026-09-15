@@ -1,4 +1,4 @@
-Feature: Idea Functionality
+Feature: As a thinking human I want to create, read, update, delete, arrange, group, and utilize ideas So that I can think in my ideas
 
   Scenario: I can create an idea
     Given an idea of "This is an idea"
@@ -17,7 +17,14 @@ Feature: Idea Functionality
     Then the idea is not in the database
     And I have a cannot exceed 500 character error message
 
-    Scenario: I can get a list of ideas
-      Given there are 5 ideas in the database
-      When I query for a list
-      Then I get 5 ideas
+  Scenario: I can get a list of ideas
+    Given there are 5 ideas in the database
+    When I query for a list
+    Then I get 5 ideas
+
+  Scenario: I can page forward on the list of ideas
+    Given there are 100 ideas in the database
+    When I query for a list
+    Then I am on page 1
+    When I query for the next page
+    Then I am on page 2

@@ -3,7 +3,7 @@ package com.nsfwllc.uberzettlegraphql.steps;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities.DecodedId;
 import com.nsfwllc.uberzettlegraphql.idea.Idea;
-import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaConnection;
+import com.nsfwllc.uberzettlegraphql.idea.IdeaConnection;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaController.IdeaNode;
 import com.nsfwllc.uberzettlegraphql.idea.IdeaRepository;
 import graphql.Assert;
@@ -25,19 +25,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static graphql.Assert.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IdeaSteps {
 	private final IdeaRepository      ideaRepository;
 	private final HttpGraphQlTester   httpGraphQlTester;
 	private final ControllerUtilities controllerUtilities;
 	IdeaConnection actualIdeaConnection = null;
-	private       Idea                expectedIdea  = null;
-	private       Response            actualResponse;
-	private       IdeaNode            actualIdeaNode;
-	private       Optional<DecodedId> actualId      = Optional.empty();
-	private       List<Idea>          expectedIdeas = new ArrayList<>();
+	private Idea                expectedIdea  = null;
+	private Response            actualResponse;
+	private IdeaNode            actualIdeaNode;
+	private Optional<DecodedId> actualId      = Optional.empty();
+	private List<Idea>          expectedIdeas = new ArrayList<>();
 
 	public IdeaSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
 					 final ControllerUtilities controllerUtilities) {
@@ -49,12 +48,12 @@ public class IdeaSteps {
 	@Before
 	public void cleanDatabase() {
 		ideaRepository.deleteAll();
-		expectedIdea = null;
+		expectedIdea   = null;
 		actualResponse = null;
 		actualIdeaNode = null;
-		actualId = Optional.empty();
+		actualId       = Optional.empty();
 		actualIdeaConnection = null;
-		expectedIdeas = new ArrayList<>();
+		expectedIdeas  = new ArrayList<>();
 	}
 
 	@Given("an idea of {string}")
@@ -79,7 +78,7 @@ public class IdeaSteps {
 					.path("ideaCreate")
 					.entity(IdeaNode.class)
 					.get();
-			actualId       = controllerUtilities.decodeCursor(actualIdeaNode.id());
+			actualId = ControllerUtilities.decodeCursor(actualIdeaNode.id());
 		}
 	}
 
@@ -87,9 +86,11 @@ public class IdeaSteps {
 	public void theIdeaIsInTheDatabase() {
 		actualId.ifPresentOrElse(decodedId -> ideaRepository.findById(decodedId.id())
 															.ifPresentOrElse(
-																	idea -> Assertions.assertEquals(expectedIdea.getIdea(),
-																									idea.getIdea()),
-																	() -> Assertions.fail("Idea " + decodedId + " not found")),
+																	idea -> Assertions.assertEquals(
+																			expectedIdea.getIdea(),
+																			idea.getIdea()),
+																	() -> Assertions.fail(
+																			"Idea " + decodedId + " not found")),
 								 () -> Assertions.fail("Could not decode " + actualIdeaNode.id()));
 	}
 
@@ -98,7 +99,7 @@ public class IdeaSteps {
 		Assert.assertFalse(ideaRepository.findAll()
 										 .stream()
 										 .anyMatch(idea -> expectedIdea.getIdea()
-																.equals(idea.getIdea())));
+																	   .equals(idea.getIdea())));
 	}
 
 	@And("I have a must not be empty error message")
@@ -110,19 +111,20 @@ public class IdeaSteps {
 
 		Assertions.assertEquals(expectedErrorMessages.size(),
 								Stream.of(actualResponse.returnResponse()
-											 .getErrors()
-											 .getFirst()
-											 .getMessage()
-											 .split(","))
-						   .map(String::trim)
-						   .filter(expectedErrorMessages::contains)
-						   .count(),
-								() -> "Expected error(s) message to be \"" + expectedErrorMessages + "\".  Error message(s): \n" +
-						   actualResponse.returnResponse()
-										 .getErrors()
-										 .stream()
-										 .map(ResponseError::getMessage)
-										 .collect(Collectors.joining("\n")));
+														.getErrors()
+														.getFirst()
+														.getMessage()
+														.split(","))
+									  .map(String::trim)
+									  .filter(expectedErrorMessages::contains)
+									  .count(),
+								() -> "Expected error(s) message to be \"" + expectedErrorMessages +
+									  "\".  Error message(s): \n" +
+									  actualResponse.returnResponse()
+													.getErrors()
+													.stream()
+													.map(ResponseError::getMessage)
+													.collect(Collectors.joining("\n")));
 	}
 
 	@And("I have a cannot exceed {int} character error message")
@@ -158,7 +160,7 @@ public class IdeaSteps {
 		final var ideaList = actualIdeaConnection.getEdges()
 												 .stream()
 												 .map(edge -> edge.getNode()
-		                                                          .idea())
+																  .idea())
 												 .toList();
 		Assertions.assertEquals(ideaCount, expectedIdeas
 				.stream()
@@ -168,4 +170,33 @@ public class IdeaSteps {
 
 	}
 
+	@Then("I am on page {int}")
+	public void iAmOnPage(int pageNumber) {
+		if (pageNumber == 1) {
+			assertTrue(actualIdeaConnection.getPageInfo()
+										   .isHasNextPage(), "There should be a next page");
+			assertFalse(actualIdeaConnection.getPageInfo()
+											.isHasPreviousPage(), "There should not be previous page");
+		} else {
+			assertTrue(actualIdeaConnection.getPageInfo()
+										   .isHasNextPage(), "There should be a next page");
+			assertTrue(actualIdeaConnection.getPageInfo()
+										   .isHasPreviousPage(), "There should be previous page");
+		}
+
+	}
+
+	@When("I query for the next page")
+	public void iQueryForTheNextPage() {
+		actualResponse       = httpGraphQlTester.documentName("ideas")
+												.variable("after", actualIdeaConnection.getPageInfo()
+																					   .getEndCursor()
+																					   .getValue())
+												.execute();
+		actualIdeaConnection = actualResponse
+				.path("data")
+				.path("ideas")
+				.entity(IdeaConnection.class)
+				.get();
+	}
 }

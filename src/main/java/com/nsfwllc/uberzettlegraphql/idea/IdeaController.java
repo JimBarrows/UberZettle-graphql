@@ -1,6 +1,7 @@
 package com.nsfwllc.uberzettlegraphql.idea;
 
 import com.nsfwllc.uberzettlegraphql.ControllerUtilities;
+import com.nsfwllc.uberzettlegraphql.ControllerUtilities.DecodedId;
 import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultPageInfo;
 import graphql.relay.Edge;
@@ -14,6 +15,10 @@ import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static com.nsfwllc.uberzettlegraphql.ControllerUtilities.encodeCursor;
 
@@ -37,28 +42,58 @@ public class IdeaController {
 						.idea(newIdea.idea())
 						.build();
 		final var savedIdea = ideaRepository.save(idea);
-		return new IdeaNode(controllerUtil.encodeCursor(Idea.class.getName(), savedIdea.getId())
-										  .orElseThrow(() -> new RuntimeException("Could not encode cursor")),
+		return new IdeaNode(encodeCursor(Idea.class.getName(), savedIdea.getId())
+									.orElseThrow(() -> new RuntimeException("Could not encode cursor")),
 							savedIdea.getIdea());
 	}
 
 	@QueryMapping
 	public IdeaConnection ideas(@Argument Integer first, @Argument String after, @Argument Integer last,
 								@Argument String before) {
-		PageRequest page = PageRequest.of(0, 1000);
-		final var edgeList = ideaRepository.findByOrderByIdAsc(page)
-										   .stream()
-										   .<Edge<IdeaNode>>map(idea -> new IdeaEdge(
-												   new IdeaNode(
-														   encodeCursor(Idea.class.getName(), idea.getId()).orElse(
-																   ""),
-														   idea.getIdea()),
-												   new DefaultConnectionCursor(
-														   encodeCursor(Idea.class.getName(), idea.getId()).orElse(
-																   ""))))
-										   .toList();
-		final boolean hasPreviousPage = false;
-		final boolean hasNextPage     = false;
+		boolean pagingBackward = last != null && first == null;
+		Integer pageSize = pagingBackward
+						   ? last
+						   : first;
+		String cursor = pagingBackward
+						? before
+						: after;
+
+		int                 requestedSize = controllerUtil.normalizePageSize(pageSize);
+		Optional<DecodedId> cursorAsId    = ControllerUtilities.decodeCursor(cursor);
+
+		PageRequest page    = PageRequest.of(0, requestedSize + 1);
+		List<Idea>  results = new ArrayList<>();
+		if (pagingBackward) {
+			results = cursorAsId.map(id -> ideaRepository.findByIdLessThanOrderByIdDesc(id.id(), page))
+								.orElseGet(() -> ideaRepository.findByOrderByIdDesc(page))
+								.reversed();
+		} else {
+			results = cursorAsId.map(id -> ideaRepository.findByIdGreaterThanOrderByIdAsc(id.id(), page))
+								.orElseGet(() -> ideaRepository.findByOrderByIdAsc(page));
+		}
+		boolean hasExtraItem = results.size() > requestedSize;
+
+		List<Idea> pageItems = hasExtraItem
+							   ? results.subList(0, requestedSize)
+							   : results;
+		final var edgeList = pageItems
+				.stream()
+				.<Edge<IdeaNode>>map(idea -> new IdeaEdge(
+						new IdeaNode(
+								encodeCursor(Idea.class.getName(), idea.getId()).orElse(
+										""),
+								idea.getIdea()),
+						new DefaultConnectionCursor(
+								encodeCursor(Idea.class.getName(), idea.getId()).orElse(
+										""))))
+				.toList();
+		boolean hasPreviousPage = pagingBackward
+								  ? hasExtraItem
+								  : cursorAsId.isPresent();
+
+		boolean hasNextPage = pagingBackward
+							  ? cursorAsId.isPresent()
+							  : hasExtraItem;
 		final var firstCursor = new DefaultConnectionCursor(edgeList.stream()
 																	.findFirst()
 																	.orElse(new IdeaEdge(null,

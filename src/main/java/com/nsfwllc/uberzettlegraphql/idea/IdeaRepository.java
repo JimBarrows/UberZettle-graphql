@@ -15,4 +15,8 @@ public interface IdeaRepository extends
 
 	List<Idea> findByIdGreaterThanOrderByIdAsc(UUID id, Pageable pageable);
 
+	List<Idea> findByIdLessThanOrderByIdDesc(UUID id, Pageable pageable);
+
+	List<Idea> findByOrderByIdDesc(Pageable pageable);
+
 }
