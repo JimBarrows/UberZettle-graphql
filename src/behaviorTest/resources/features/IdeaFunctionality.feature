@@ -28,3 +28,20 @@ Feature: As a thinking human I want to create, read, update, delete, arrange, gr
     Then I am on page 1
     When I query for the next page
     Then I am on page 2
+
+  Scenario: I can page backward on the list of ideas
+    Given there are 100 ideas in the database
+    When I query for a list
+    Then I am on page 1
+    When I query for the next page
+    Then I am on page 2
+    When I query for the previous page
+    Then I am on page 1
+
+  Scenario: I can start at the first idea, and get first 10
+    Given there are 100 ideas in the database
+    When I query for the first 10 from the index of 0
+    Then I am on page 1
+    And I have 10 items in the list
+    And the first item in the list is the same as the first idea
+    And the last item in the list is the same as the 9 idea in the list

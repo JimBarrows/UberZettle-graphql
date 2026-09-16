@@ -13,6 +13,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.jupiter.api.Assertions;
+import org.springframework.data.domain.Pageable;
 import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.test.tester.GraphQlTester.Response;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
@@ -24,7 +25,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.nsfwllc.uberzettlegraphql.ControllerUtilities.decodeCursor;
+import static com.nsfwllc.uberzettlegraphql.ControllerUtilities.encodeCursor;
 import static graphql.Assert.assertFalse;
+import static java.util.Optional.empty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IdeaSteps {
@@ -35,7 +40,7 @@ public class IdeaSteps {
 	private Idea                expectedIdea  = null;
 	private Response            actualResponse;
 	private IdeaNode            actualIdeaNode;
-	private Optional<DecodedId> actualId      = Optional.empty();
+	private Optional<DecodedId> actualId = empty();
 	private List<Idea>          expectedIdeas = new ArrayList<>();
 
 	public IdeaSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
@@ -51,7 +56,7 @@ public class IdeaSteps {
 		expectedIdea   = null;
 		actualResponse = null;
 		actualIdeaNode = null;
-		actualId       = Optional.empty();
+		actualId       = empty();
 		actualIdeaConnection = null;
 		expectedIdeas  = new ArrayList<>();
 	}
@@ -86,7 +91,7 @@ public class IdeaSteps {
 	public void theIdeaIsInTheDatabase() {
 		actualId.ifPresentOrElse(decodedId -> ideaRepository.findById(decodedId.id())
 															.ifPresentOrElse(
-																	idea -> Assertions.assertEquals(
+																	idea -> assertEquals(
 																			expectedIdea.getIdea(),
 																			idea.getIdea()),
 																	() -> Assertions.fail(
@@ -109,22 +114,22 @@ public class IdeaSteps {
 
 	private void assertErrorMessagesThatSay(final List<String> expectedErrorMessages) {
 
-		Assertions.assertEquals(expectedErrorMessages.size(),
-								Stream.of(actualResponse.returnResponse()
-														.getErrors()
-														.getFirst()
-														.getMessage()
-														.split(","))
-									  .map(String::trim)
-									  .filter(expectedErrorMessages::contains)
-									  .count(),
-								() -> "Expected error(s) message to be \"" + expectedErrorMessages +
-									  "\".  Error message(s): \n" +
-									  actualResponse.returnResponse()
-													.getErrors()
-													.stream()
-													.map(ResponseError::getMessage)
-													.collect(Collectors.joining("\n")));
+		assertEquals(expectedErrorMessages.size(),
+					 Stream.of(actualResponse.returnResponse()
+											 .getErrors()
+											 .getFirst()
+											 .getMessage()
+											 .split(","))
+						   .map(String::trim)
+						   .filter(expectedErrorMessages::contains)
+						   .count(),
+					 () -> "Expected error(s) message to be \"" + expectedErrorMessages +
+						   "\".  Error message(s): \n" +
+						   actualResponse.returnResponse()
+										 .getErrors()
+										 .stream()
+										 .map(ResponseError::getMessage)
+										 .collect(Collectors.joining("\n")));
 	}
 
 	@And("I have a cannot exceed {int} character error message")
@@ -140,6 +145,7 @@ public class IdeaSteps {
 								  .build());
 		}
 		expectedIdeas = ideaRepository.saveAll(expectedIdeas);
+		expectedIdeas = ideaRepository.findByOrderByIdAsc(Pageable.unpaged());
 	}
 
 	@When("I query for a list")
@@ -155,14 +161,14 @@ public class IdeaSteps {
 
 	@Then("I get {int} ideas")
 	public void iGetIdeas(int ideaCount) {
-		Assertions.assertEquals(ideaCount, actualIdeaConnection.getEdges()
-															   .size());
+		assertEquals(ideaCount, actualIdeaConnection.getEdges()
+													.size());
 		final var ideaList = actualIdeaConnection.getEdges()
 												 .stream()
 												 .map(edge -> edge.getNode()
 																  .idea())
 												 .toList();
-		Assertions.assertEquals(ideaCount, expectedIdeas
+		assertEquals(ideaCount, expectedIdeas
 				.stream()
 				.filter(idea ->
 								ideaList.contains(idea.getIdea()))
@@ -198,5 +204,70 @@ public class IdeaSteps {
 				.path("ideas")
 				.entity(IdeaConnection.class)
 				.get();
+	}
+
+	@When("I query for the previous page")
+	public void iQueryForThePreviousPage() {
+		actualResponse       = httpGraphQlTester.documentName("ideas")
+												.variable("before", actualIdeaConnection.getPageInfo()
+																						.getEndCursor()
+																						.getValue())
+												.execute();
+		actualIdeaConnection = actualResponse
+				.path("data")
+				.path("ideas")
+				.entity(IdeaConnection.class)
+				.get();
+	}
+
+	@When("I query for the first {int} from the index of {int}")
+	public void iQueryForFromTheIndexOf(int count, int index) {
+		Optional<String> cursor;
+		if ((index == 0) || (index >= expectedIdeas.size())) {
+			cursor = empty();
+		} else {
+			cursor = encodeCursor(Idea.class.getName(), expectedIdeas.get(index)
+																	 .getId());
+		}
+		actualResponse       = httpGraphQlTester.documentName("ideas")
+												.variable("first", count)
+												.variable("after", cursor.orElse(null))
+												.execute();
+		actualIdeaConnection = actualResponse
+				.path("data")
+				.path("ideas")
+				.entity(IdeaConnection.class)
+				.get();
+	}
+
+
+	@And("I have {int} items in the list")
+	public void iHaveItemsInTheList(int count) {
+		assertEquals(count, actualIdeaConnection.getEdges()
+												.size());
+	}
+
+	@And("the first item in the list is the same as the first idea")
+	public void theFirstItemInTheListIsTheSameAsTheFirstIdea() {
+		assertEquals(expectedIdeas.getFirst()
+								  .getId(),
+					 decodeCursor(actualIdeaConnection.getEdges()
+													  .getFirst()
+													  .getCursor()
+													  .getValue())
+							 .orElse(new DecodedId(null, null))
+							 .id());
+	}
+
+	@And("the last item in the list is the same as the {int} idea in the list")
+	public void theLastItemInTheListIsTheSameAsTheIdeaInTheList(int index) {
+		assertEquals(expectedIdeas.get(index)
+								  .getId(),
+					 decodeCursor(actualIdeaConnection.getEdges()
+													  .getLast()
+													  .getCursor()
+													  .getValue())
+							 .orElse(new DecodedId(null, null))
+							 .id());
 	}
 }
