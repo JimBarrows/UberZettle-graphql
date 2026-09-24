@@ -62,7 +62,7 @@ public class IdeaController {
 		Optional<DecodedId> cursorAsId    = ControllerUtilities.decodeCursor(cursor);
 
 		PageRequest page    = PageRequest.of(0, requestedSize + 1);
-		List<Idea>  results = new ArrayList<>();
+		List<Idea>  results;
 		if (pagingBackward) {
 			results = cursorAsId.map(id -> ideaRepository.findByIdLessThanOrderByIdDesc(id.id(), page))
 								.orElseGet(() -> ideaRepository.findByOrderByIdDesc(page))

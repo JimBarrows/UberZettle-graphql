@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,7 +41,7 @@ public class IdeaSteps {
 	private Idea                expectedIdea  = null;
 	private Response            actualResponse;
 	private IdeaNode            actualIdeaNode;
-	private Optional<DecodedId> actualId = empty();
+	private Optional<DecodedId> actualId      = empty();
 	private List<Idea>          expectedIdeas = new ArrayList<>();
 
 	public IdeaSteps(final IdeaRepository ideaRepository, final HttpGraphQlTester httpGraphQlTester,
@@ -53,12 +54,12 @@ public class IdeaSteps {
 	@Before
 	public void cleanDatabase() {
 		ideaRepository.deleteAll();
-		expectedIdea   = null;
-		actualResponse = null;
-		actualIdeaNode = null;
-		actualId       = empty();
+		expectedIdea         = null;
+		actualResponse       = null;
+		actualIdeaNode       = null;
+		actualId             = empty();
 		actualIdeaConnection = null;
-		expectedIdeas  = new ArrayList<>();
+		expectedIdeas        = new ArrayList<>();
 	}
 
 	@Given("an idea of {string}")
@@ -83,7 +84,7 @@ public class IdeaSteps {
 					.path("ideaCreate")
 					.entity(IdeaNode.class)
 					.get();
-			actualId = ControllerUtilities.decodeCursor(actualIdeaNode.id());
+			actualId       = ControllerUtilities.decodeCursor(actualIdeaNode.id());
 		}
 	}
 
@@ -265,6 +266,47 @@ public class IdeaSteps {
 								  .getId(),
 					 decodeCursor(actualIdeaConnection.getEdges()
 													  .getLast()
+													  .getCursor()
+													  .getValue())
+							 .orElse(new DecodedId(null, null))
+							 .id());
+	}
+
+	@When("I query for the last {int} from the index of {int}")
+	public void iQueryForTheLastFromTheIndexOf(int count, int index) {
+		Optional<String> cursor;
+		if ((index == 0) || (index >= expectedIdeas.size())) {
+			cursor = empty();
+		} else {
+			cursor = encodeCursor(Idea.class.getName(), expectedIdeas.get(index)
+																	 .getId());
+		}
+		actualResponse       = httpGraphQlTester.documentName("ideas")
+												.variable("last", count)
+												.variable("before", cursor.orElse(null))
+												.execute();
+		actualIdeaConnection = actualResponse
+				.path("data")
+				.path("ideas")
+				.entity(IdeaConnection.class)
+				.get();
+	}
+
+	@And("the first item in the list is the same as the {int} idea")
+	public void theFirstItemInTheListIsTheSameAsTheIdea(int index) {
+		final AtomicInteger i = new AtomicInteger();
+		ideaRepository.findByOrderByIdDesc(Pageable.unpaged()).subList(0, 10)
+					 .forEach(idea -> System.out.println("expected [" + i.getAndIncrement() + "]: " + idea.getId() + " = " + idea.getIdea()));
+		i.set(0);
+		actualIdeaConnection.getEdges()
+		                    .forEach(edge -> System.out.println("actual:  [" + i.getAndIncrement() + "]: "
+																+ decodeCursor(edge.getCursor().getValue()).get().id()
+																+ " = "
+																+ edge.getNode().idea()));
+		assertEquals(expectedIdeas.get(index)
+								  .getId(),
+					 decodeCursor(actualIdeaConnection.getEdges()
+													  .getFirst()
 													  .getCursor()
 													  .getValue())
 							 .orElse(new DecodedId(null, null))
