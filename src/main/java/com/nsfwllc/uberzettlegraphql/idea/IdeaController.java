@@ -16,7 +16,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,21 +60,24 @@ public class IdeaController {
 		int                 requestedSize = controllerUtil.normalizePageSize(pageSize);
 		Optional<DecodedId> cursorAsId    = ControllerUtilities.decodeCursor(cursor);
 
-		PageRequest page    = PageRequest.of(0, requestedSize + 1);
+		PageRequest page = PageRequest.of(0, requestedSize + 1);
 		List<Idea>  results;
 		if (pagingBackward) {
 			results = cursorAsId.map(id -> ideaRepository.findByIdLessThanOrderByIdDesc(id.id(), page))
-								.orElseGet(() -> ideaRepository.findByOrderByIdDesc(page))
-								.reversed();
+								.orElseGet(() -> ideaRepository.findByOrderByIdDesc(page));
 		} else {
 			results = cursorAsId.map(id -> ideaRepository.findByIdGreaterThanOrderByIdAsc(id.id(), page))
 								.orElseGet(() -> ideaRepository.findByOrderByIdAsc(page));
 		}
 		boolean hasExtraItem = results.size() > requestedSize;
 
+
 		List<Idea> pageItems = hasExtraItem
 							   ? results.subList(0, requestedSize)
 							   : results;
+		if (pagingBackward) {
+			pageItems = pageItems.reversed();
+		}
 		final var edgeList = pageItems
 				.stream()
 				.<Edge<IdeaNode>>map(idea -> new IdeaEdge(

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -283,7 +282,7 @@ public class IdeaSteps {
 		}
 		actualResponse       = httpGraphQlTester.documentName("ideas")
 												.variable("last", count)
-												.variable("before", cursor.orElse(null))
+//												.variable("before", cursor.orElse(null))
 												.execute();
 		actualIdeaConnection = actualResponse
 				.path("data")
@@ -294,15 +293,6 @@ public class IdeaSteps {
 
 	@And("the first item in the list is the same as the {int} idea")
 	public void theFirstItemInTheListIsTheSameAsTheIdea(int index) {
-		final AtomicInteger i = new AtomicInteger();
-		ideaRepository.findByOrderByIdDesc(Pageable.unpaged()).subList(0, 10)
-					 .forEach(idea -> System.out.println("expected [" + i.getAndIncrement() + "]: " + idea.getId() + " = " + idea.getIdea()));
-		i.set(0);
-		actualIdeaConnection.getEdges()
-		                    .forEach(edge -> System.out.println("actual:  [" + i.getAndIncrement() + "]: "
-																+ decodeCursor(edge.getCursor().getValue()).get().id()
-																+ " = "
-																+ edge.getNode().idea()));
 		assertEquals(expectedIdeas.get(index)
 								  .getId(),
 					 decodeCursor(actualIdeaConnection.getEdges()

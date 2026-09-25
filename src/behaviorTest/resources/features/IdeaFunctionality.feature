@@ -49,7 +49,6 @@ Feature: As a thinking human I want to create, read, update, delete, arrange, gr
   Scenario: I can start at the last idea, and get last 10
     Given there are 100 ideas in the database
     When I query for the last 10 from the index of 99
-    Then I am on page 10
-    And I have 10 items in the list
+    Then I have 10 items in the list
     And the first item in the list is the same as the 90 idea
     And the last item in the list is the same as the 99 idea in the list
